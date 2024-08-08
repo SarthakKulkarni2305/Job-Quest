@@ -1,0 +1,290 @@
+/*
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:job_quest/screens/job/applicant_card.dart';
+
+class ApplicantsApp extends StatefulWidget {
+  final String? job_id;
+  const ApplicantsApp({super.key, this.job_id});
+
+  @override
+  State<ApplicantsApp> createState() => _ApplicantsAppState();
+}
+
+class _ApplicantsAppState extends State<ApplicantsApp> {
+  final _auth = FirebaseAuth.instance;
+  String? nameForposted;
+  String? userImageForPosted;
+  String? addressForposted;
+  void getMyData() async {
+    final DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .get();
+
+    setState(() {
+      nameForposted = userDoc.get('name');
+      userImageForPosted = userDoc.get('user_image');
+      addressForposted = userDoc.get('address');
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getMyData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    User? user = _auth.currentUser;
+    final uid = user!.uid;
+
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(
+          color: Colors.orange,
+        ),
+        title: const Padding(
+          padding: EdgeInsets.only(left: 180),
+          child: Text(
+            "JobQuest",
+            style: TextStyle(color: Colors.orange),
+          ),
+        ),
+      ),
+      body: Container(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance
+                .collection('jobPosted')
+                .doc(widget.job_id)
+                .get(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else {
+                if (snapshot.data!["applicantsList"] == null) {
+                  const Center(child: Text('No applicant for this job'));
+                }
+              }
+              return ListView.separated(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    return Applicant(
+                      name: snapshot.data!['applicantsList'][index]['name'],
+                      //title: snapshot.data.docs[index]['title'],
+                      profilePic: snapshot.data!['applicantsList'][index]
+                          ['user_image'],
+                      date: snapshot.data!['applicantsList'][index]
+                              ['timeapplied']
+                          .toDate(),
+                    );
+                  },
+                  separatorBuilder: (context, index) {
+                    return const Divider(
+                      thickness: 1,
+                      color: Colors.grey,
+                    );
+                  },
+                  itemCount: snapshot.data!['applicantsList'].length);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+*/
+
+
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:job_quest/screens/job/applicant_card.dart';
+
+class Applicants extends StatefulWidget {
+  final String jobId;
+  const Applicants({Key? key, required this.jobId}) : super(key: key);
+
+  @override
+  State<Applicants> createState() => _ApplicantsState();
+}
+
+class _ApplicantsState extends State<Applicants> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  String? nameForposted;
+  String? userImageForPosted;
+  String? addressForposted;
+
+  @override
+  void initState() {
+    super.initState();
+    getMyData();
+  }
+
+  void getMyData() async {
+    final DocumentSnapshot userDoc = await _firestore
+        .collection('users')
+        .doc(_auth.currentUser!.uid)
+        .get();
+
+    setState(() {
+      nameForposted = userDoc.get('name');
+      userImageForPosted = userDoc.get('user_image');
+      addressForposted = userDoc.get('address');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(
+          color: Colors.orange,
+        ),
+        title: const Padding(
+          padding: EdgeInsets.only(left: 180),
+          child: Text(
+            "JobQuest",
+            style: TextStyle(color: Colors.orange),
+          ),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: FutureBuilder<DocumentSnapshot>(
+          future: _firestore
+              .collection('jobPosted')
+              .doc(widget.jobId)
+              .get(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } 
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+            if (!snapshot.hasData || !snapshot.data!.exists) {
+              return const Center(child: Text('Job not found'));
+            }
+            
+            var jobData = snapshot.data!.data() as Map<String, dynamic>;
+            var applicantsList = jobData['applicantsList'] as List<dynamic>?;
+            
+            if (applicantsList == null || applicantsList.isEmpty) {
+              return const Center(child: Text('No applicants for this job'));
+            }
+
+            return ListView.separated(
+              itemCount: applicantsList.length,
+              separatorBuilder: (context, index) {
+                return const Divider(
+                  thickness: 1,
+                  color: Colors.grey,
+                );
+              },
+              itemBuilder: (context, index) {
+                var applicant = applicantsList[index];
+                return Applicant(
+                  name: applicant['name'] ?? 'Unknown',
+                  profilePic: applicant['user_image'] ?? '',
+                  date: (applicant['timeapplied'] as Timestamp).toDate(),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+
+
+/*
+Container(
+      child: FutureBuilder<DocumentSnapshot>(
+        future: FirebaseFirestore.instance
+            .collection('jobPosted')
+            .doc('job_id')
+            .get(),
+        builder: (context, AsyncSnapshot snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.connectionState == ConnectionState.active) {
+            if (snapshot.data?.docs.isNotEmpty == true) {
+              return Padding(
+                padding: const EdgeInsets.only(
+                  top: 0,
+                  bottom: layout.padding,
+                  left: layout.padding,
+                  right: layout.padding,
+                ),
+                child: ListView.builder(
+                    itemCount: snapshot.data?.docs.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Applicant(
+                        name: snapshot.data!['applicantsList'][index]['name'],
+                        //title: snapshot.data.docs[index]['title'],
+                        profilePic: snapshot.data!['applicantsList']
+                            ['user_image'],
+                        date: snapshot.data!['applicantsList'][index]
+                                ['timeapplied']
+                            .toDate(),
+                      );
+                    }),
+              );
+            } else {
+              return Padding(
+                padding: const EdgeInsets.all(layout.padding * 6),
+                child: Center(
+                  child: Image.asset('assets/images/empty.png'),
+                ),
+              );
+            }
+          } else {
+            return Center(
+              child: Text(
+                'FATAL ERROR',
+                style: txt.error,
+              ),
+            );
+          }
+        },
+      ),
+    );
+*/
+/*
+Column(
+      children: [
+        Job(
+          position: 'Hospital Rceptionist',
+          companyName: 'AAU',
+          date: DateTime(2012, 1, 12),
+          type: 'posted',
+        ),
+        Job(
+          position: 'Script Writer',
+          companyName: 'iCog',
+          date: DateTime(2012, 2, 11),
+          type: 'posted',
+        ),
+        Job(
+          position: 'position',
+          companyName: 'companyName',
+          date: DateTime(2011, 10, 12),
+          type: 'posted',
+        ),
+      ],
+    )
+*/

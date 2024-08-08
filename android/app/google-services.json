@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "71143989812",
+    "project_id": "jobquest-3dbb3",
+    "storage_bucket": "jobquest-3dbb3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:71143989812:android:c07a9eb1c462db9bf7e061",
+        "android_client_info": {
+          "package_name": "com.example.job_quest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCM2NMZ1bjqS_wCCwu3K9AwXDUNQ_qDLl0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
